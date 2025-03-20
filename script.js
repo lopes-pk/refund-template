@@ -10,7 +10,9 @@ const expenseQuantity = document.querySelector('#expense-quantity')
 const listaDeGastos = []
 
 expense.oninput = () => {
+
    expense.value = expense.value.replace(/\d/g, "")
+
 }
 amount.oninput = () => {
    let value = amount.value.replace(/\D/g, "")
@@ -19,30 +21,38 @@ amount.oninput = () => {
 
    amount.value = formatCurrencyBRL(value)
 
-   console.log(typeof (totalSpent.lastChild.data))
 }
 
 form.onsubmit = (e) => {
    e.preventDefault()
 
-   const nameExpense = expense.value
-   const categoryExpense = category.value
-   const moneySpent = amount.value
-
-   listaDeGastos.push({
-      name: nameExpense,
-      category: categoryExpense,
-      spent: moneySpent
+   const expenses = {
+      nameExpense: expense.value,
+      categoryExpense: category.value,
+      moneySpent: amount.value
+   }
+   const expenseAlreadyExist = listaDeGastos.some(item => {
+      return item.nameExpense === expenses.nameExpense &&
+         item.categoryExpense === expenses.categoryExpense &&
+         item.moneySpent === expenses.moneySpent
    })
 
-   console.log(listaDeGastos)
+   if (expenseAlreadyExist) {
+      alert('voce ja fez isso')
+   } else {
+      listaDeGastos.push(expenses)
+   }
+
+   expense.value = ''
+   category.value = ''
+   amount.value = ''
 
    addExpense()
-   showTotalAmount()
+   updateTotalAmount()
 
 }
 
-exclude.addEventListener('click', removeExpense)
+exclude.addEventListener('click', removeExpense);
 
 function addExpense() {
    let itemOfList = ''
@@ -50,14 +60,14 @@ function addExpense() {
    listaDeGastos.forEach((item, index) => {
       itemOfList = itemOfList + `
    <li class="expense">
-              <img src="./img/${item.category}.svg" alt="Ícone de tipo da despesa" />
+              <img src="./img/${item.categoryExpense}.svg" alt="Ícone de tipo da despesa" />
 
               <div class="expense-info">
-                <strong>${item.name}</strong>
-                <span>${item.category}</span>
+                <strong>${item.nameExpense}</strong>
+                <span>${item.categoryExpense}</span>
               </div>
 
-              <span class="expense-amount"><small>R$</small>${item.spent}</span>
+              <span class="expense-amount"><small>R$</small>${item.moneySpent}</span>
 
               <img src="./img/remove.svg" alt="remover" class="remove-icon" onclick="removeExpense(${index})"/>
    </li>`
@@ -68,8 +78,9 @@ function addExpense() {
 }
 
 function removeExpense(index) {
-   listaDeGastos.pop(index)
+   listaDeGastos.splice(index, 1)
    addExpense()
+   updateTotalAmount()
 }
 
 function formatCurrencyBRL(amount) {
@@ -82,16 +93,20 @@ function formatCurrencyBRL(amount) {
    return amountFormatted
 }
 
-function showTotalAmount() {
+function updateTotalAmount() {
    let valorTotal = 0
 
    listaDeGastos.forEach(item => {
-      const valueConverted = parseFloat(item.spent.replace(/[^0-9,-]/g, ''))
+      const valueConverted = parseFloat(item.moneySpent.replace(/[^0-9,-]/g, ''))
       valorTotal = valorTotal + valueConverted
 
    })
 
-   totalSpent.innerHTML = `<small>R$</small> ${valorTotal.toFixed(2).replace(".", ",")}`
+   const valueFormatted = valorTotal.toLocaleString("pt-BR", {
+      currency: "BRL"
+   })
+
+   totalSpent.innerHTML = `<small>R$</small> ${valueFormatted}`
 }
 
 function showExpense() {
